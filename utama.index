@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator Premium Futuristik</title>
+    <!-- Menggunakan Font Poppins dari Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #080710;
+            --calc-bg: rgba(255, 255, 255, 0.03);
+            --calc-border: rgba(255, 255, 255, 0.08);
+            --text-main: #ffffff;
+            --text-muted: #85858c;
+            --accent-glow: rgba(122, 92, 250, 0.4);
+            --btn-normal: rgba(255, 255, 255, 0.05);
+            --btn-hover: rgba(255, 255, 255, 0.12);
+            --btn-active: rgba(255, 255, 255, 0.2);
+            --btn-op: linear-gradient(135deg, #7a5cfa, #5031d9);
+            --btn-op-hover: linear-gradient(135deg, #9175ff, #6242f2);
+            --popup-bg: rgba(15, 15, 25, 0.85);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Ambient Glow Background Efek */
+        body::before, body::after {
+            content: '';
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: var(--accent-glow);
+            filter: blur(100px);
+            z-index: 0;
+            animation: floatGlow 10s infinite alternate ease-in-out;
+        }
+
+        body::before {
+            top: 15%;
+            left: 20%;
+        }
+
+        body::after {
+            bottom: 15%;
+            right: 20%;
+            animation-delay: -5s;
+        }
+
+        @keyframes floatGlow {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(30px, -30px) scale(1.2); }
+        }
+
+        /* Container Kalkulator */
+        .calculator {
+            width: 100%;
+            max-width: 380px;
+            background: var(--calc-bg);
+            border: 1px solid var(--calc-border);
+            border-radius: 32px;
+            padding: 30px;
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5),
+                        0 0 40px rgba(122, 92, 250, 0.1);
+            z-index: 10;
+            transform: scale(0.95);
+            opacity: 0;
+            animation: appearance 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes appearance {
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Area Layar/Display */
+        .display {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: flex-end;
+            min-height: 130px;
+            margin-bottom: 25px;
+            padding: 0 10px;
+            word-wrap: break-word;
+            word-break: break-all;
+        }
+
+        .display .history {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            font-weight: 300;
+            min-height: 27px;
+            transition: all 0.2s ease;
+        }
+
+        .display .current {
+            font-size: 2.8rem;
+            color: var(--text-main);
+            font-weight: 600;
+            margin-top: 5px;
+            line-height: 1.2;
+            transition: all 0.2s ease;
+        }
+
+        /* Grid Tombol */
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+        }
+
+        button {
+            border: none;
+            outline: none;
+            height: 68px;
+            border-radius: 20px;
+            font-size: 1.4rem;
+            font-weight: 500;
+            color: var(--text-main);
+            background: var(--btn-normal);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Hover & Active State */
+        @media (hover: hover) {
+            button:hover {
+                background: var(--btn-hover);
+                transform: translateY(-2px);
+            }
+        }
+
+        button:active {
+            background: var(--btn-active);
+            transform: translateY(1px) scale(0.97);
+        }
+
+        /* Tombol Operator Utama */
+        button.operator {
+            background: var(--btn-op);
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(122, 92, 250, 0.3);
+        }
+
+        @media (hover: hover) {
+            button.operator:hover {
+                background: var(--btn-op-hover);
+                box-shadow: 0 6px 20px rgba(122, 92, 250, 0.4);
+            }
+        }
+
+        /* Tombol Fungsi Atas (AC, +/-, %) */
+        button.func {
+            color: #7a5cfa;
+            font-weight: 600;
+            background: rgba(122, 92, 250, 0.08);
+        }
+
+        /* Custom span 2 kolom untuk angka 0 */
+        button.zero {
+            grid-column: span 2;
+            justify-content: flex-start;
+            padding-left: 28px;
+        }
+
+        /* MODAL POPUP PREMIUM */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            background: var(--popup-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            width: 100%;
+            max-width: 340px;
+            border-radius: 28px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6),
+                        0 0 50px rgba(122, 92, 250, 0.2);
+            transform: translateY(40px) scale(0.9);
+            opacity: 0;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s ease;
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+        }
+
+        /* Icon Badge Premium */
+        .premium-badge {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #ffd700, #ffa500);
+            border-radius: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto 20px;
+            font-size: 1.8rem;
+            box-shadow: 0 10px 20px rgba(255, 165, 0, 0.3);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .modal-content h3 {
+            color: var(--text-main);
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .modal-content p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin-bottom: 25px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .btn-premium {
+            width: 100%;
+            height: 52px;
+            border-radius: 14px;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-buy {
+            background: linear-gradient(135deg, #ffd700, #ffa500);
+            color: #000;
+            box-shadow: 0 4px 15px rgba(255, 165, 0, 0.3);
+        }
+
+        .btn-buy:active {
+            transform: scale(0.98);
+        }
+
+        .btn-skip {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-muted);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .btn-skip:hover {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Loading Spinner internal button */
+        .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: #000;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsif untuk layar HP kecil */
+        @media (max-width: 400px) {
+            .calculator {
+                padding: 20px;
+                border-radius: 24px;
+            }
+            button {
+                height: 60px;
+                border-radius: 16px;
+                font-size: 1.25rem;
+            }
+            button.zero {
+                padding-left: 24px;
+            }
+            .display .current {
+                font-size: 2.3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Komponen Utama Kalkulator -->
+    <div class="calculator">
+        <div class="display">
+            <div class="history" id="history"></div>
+            <div class="current" id="current">0</div>
+        </div>
+        <div class="buttons">
+            <button class="func" onclick="clearAll()">AC</button>
+            <button class="func" onclick="toggleSign()">+/-</button>
+            <button class="func" onclick="appendOperator('%')">%</button>
+            <button class="operator" onclick="appendOperator('÷')">÷</button>
+
+            <button onclick="appendNumber('7')">7</button>
+            <button onclick="appendNumber('8')">8</button>
+            <button onclick="appendNumber('9')">9</button>
+            <button class="operator" onclick="appendOperator('×')">×</button>
+
+            <button onclick="appendNumber('4')">4</button>
+            <button onclick="appendNumber('5')">5</button>
+            <button onclick="appendNumber('6')">6</button>
+            <button class="operator" onclick="appendOperator('-')">-</button>
+
+            <button onclick="appendNumber('1')">1</button>
+            <button onclick="appendNumber('2')">2</button>
+            <button onclick="appendNumber('3')">3</button>
+            <button class="operator" onclick="appendOperator('+')">+</button>
+
+            <button class="zero" onclick="appendNumber('0')">0</button>
+            <button onclick="appendNumber('.')">.</button>
+            <button class="operator" onclick="triggerEqual()">=</button>
+        </div>
+    </div>
+
+    <!-- Popup Prank Premium -->
+    <div class="modal-overlay" id="premiumModal">
+        <div class="modal-content">
+            <div class="premium-badge">👑</div>
+            <h3 id="modalTitle">Untuk melihat jawaban</h3>
+            <p id="modalText">Di dunia ini tak ada yang gratis, bayar untuk lihat jawaban!</p>
+            <div class="modal-buttons" id="modalActionContainer">
+                <button class="btn-premium btn-buy" id="btnBuy" onclick="handleBuy()">
+                    <span id="btnBuyText">Beli Sekarang</span>
+                    <div class="spinner" id="buySpinner"></div>
+                </button>
+                <button class="btn-premium btn-skip" id="btnSkip" onclick="handleSkip()">Skip Dulu</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Inisialisasi variabel state kalkulator
+        let currentInput = '0';
+        let historyInput = '';
+        let isCalculated = false;
+
+        const currentDisplay = document.getElementById('current');
+        const historyDisplay = document.getElementById('history');
+        const modal = document.getElementById('premiumModal');
+
+        // AUDIO SYNTHESIZER: Efek suara klik tak perlu file mp3 eksternal
+        function playClickSound() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+
+                oscillator.type = 'sine';
+                // Frekuensi tinggi singkat untuk meniru ketukan UI modern
+                oscillator.frequency.setValueAtTime(400, audioCtx.currentTime); 
+                oscillator.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.04);
+                
+                gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + 0.05);
+            } catch (e) {
+                console.log("AudioContext tidak didukung/dizinkan oleh browser.");
+            }
+        }
+
+        // Event Listener Global Suara Klik Tombol
+        document.querySelectorAll('button').forEach(button => {
+            button.addEventListener('click', playClickSound);
+        });
+
+        // FUNGSI LOGIKA KALKULATOR
+        function updateDisplay() {
+            currentDisplay.innerText = formatNumberString(currentInput);
+            historyDisplay.innerText = historyInput;
+        }
+
+        function formatNumberString(numStr) {
+            if (numStr === 'Error' || numStr === 'NaN') return numStr;
+            // Pisahkan bagian desimal agar tidak rusak oleh regex format ribuan
+            let parts = numStr.split('.');
+            parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            return parts.join('.');
+        }
+
+        function appendNumber(num) {
+            if (isCalculated) {
+                currentInput = num === '.' ? '0.' : num;
+                isCalculated = false;
+            } else {
+                if (num === '.' && currentInput.includes('.')) return;
+                if (currentInput === '0' && num !== '.') {
+                    currentInput = num;
+                } else {
+                    currentInput += num;
+                }
+            }
+            updateDisplay();
+        }
+
+        function appendOperator(op) {
+            if (isCalculated) isCalculated = false;
+            
+            let lastChar = currentInput.slice(-1);
+            if (['+', '-', '×', '÷', '%'].includes(lastChar)) {
+                currentInput = currentInput.slice(0, -1) + op;
+            } else {
+                currentInput += op;
+            }
+            updateDisplay();
+        }
+
+        function clearAll() {
+            currentInput = '0';
+            historyInput = '';
+            isCalculated = false;
+            updateDisplay();
+        }
+
+        function toggleSign() {
+            if (currentInput === '0' || currentInput === 'Error') return;
+            if (currentInput.startsWith('-')) {
+                currentInput = currentInput.slice(1);
+            } else {
+                currentInput = '-' + currentInput;
+            }
+            updateDisplay();
+        }
+
+        // LOGIKA AKHIR & POPUP PRANK
+        function triggerEqual() {
+            if (currentInput === '0' && historyInput === '') return;
+            
+            // Simpan riwayat ekspresi sebelum diproses
+            historyInput = currentInput + ' =';
+            
+            // Buka Jendela Prank Popup Premium
+            modal.classList.add('active');
+        }
+
+        function calculateResult() {
+            try {
+                // Parsing format visual ke operator matematika standar JS
+                let expression = currentInput.replace(/×/g, '*').replace(/÷/g, '/');
+                
+                // Evaluasi ekspresi matematika aman sederhana
+                let result = eval(expression);
+                
+                // Atasi pembulatan float bermasalah (contoh: 0.1 + 0.2)
+                if (result % 1 !== 0) {
+                    result = parseFloat(result.toFixed(8));
+                }
+                
+                currentInput = result.toString();
+            } catch (error) {
+                currentInput = 'Error';
+            }
+            isCalculated = true;
+            updateDisplay();
+        }
+
+        // INTERAKSI POPUP
+        function handleBuy() {
+            const btnText = document.getElementById('btnBuyText');
+            const spinner = document.getElementById('buySpinner');
+            const btnBuy = document.getElementById('btnBuy');
+            const btnSkip = document.getElementById('btnSkip');
+
+            // Set loading state
+            btnText.style.display = 'none';
+            spinner.style.display = 'block';
+            btnBuy.style.pointerEvents = 'none';
+            btnSkip.style.pointerEvents = 'none';
+
+            setTimeout(() => {
+                // Ubah konten popup setelah 2 detik loading selesai
+                spinner.style.display = 'none';
+                document.getElementById('modalTitle').innerText = "Cuma bercanda 😆";
+                document.getElementById('modalText').innerText = "Kalkulator ini 100% gratis kok. Silakan pakai hasilnya!";
+                
+                // Modifikasi tombol menjadi tombol tutup tunggal
+                btnBuy.style.display = 'none';
+                btnSkip.innerText = "Buka Hasil Perhitungan";
+                btnSkip.style.pointerEvents = 'auto';
+                btnSkip.classList.remove('btn-skip');
+                btnSkip.classList.add('btn-buy'); // jadikan tombol utama aksen emas
+            }, 2000);
+        }
+
+        function handleSkip() {
+            // Tutup modal popup
+            modal.classList.remove('active');
+            
+            // Eksekusi fungsi kalkulasi hasil asli di belakang layar
+            calculateResult();
+
+            // Kembalikan konfigurasi teks bawaan modal popup ke awal setelah animasi selesai
+            setTimeout(() => {
+                document.getElementById('modalTitle').innerText = "Untuk melihat jawaban";
+                document.getElementById('modalText').innerText = "Di dunia ini tak ada yang gratis, bayar untuk lihat jawaban!";
+                document.getElementById('btnBuy').style.display = 'flex';
+                document.getElementById('btnBuyText').style.display = 'inline';
+                document.getElementById('btnBuy').style.pointerEvents = 'auto';
+                
+                const btnSkip = document.getElementById('btnSkip');
+                btnSkip.innerText = "Skip Dulu";
+                btnSkip.classList.remove('btn-buy');
+                btnSkip.classList.add('btn-skip');
+            }, 400);
+        }
+    </script>
+</body>
+</html>
+
